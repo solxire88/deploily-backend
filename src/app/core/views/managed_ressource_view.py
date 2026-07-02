@@ -3,12 +3,32 @@
 from flask_appbuilder import ModelView
 from flask_appbuilder.models.sqla.filters import FilterEqual
 from flask_appbuilder.models.sqla.interface import SQLAInterface
+from markupsafe import Markup
 
 from app import appbuilder, db
 from app.core.models.managed_ressource_models import ManagedRessource
 
-_LIST_COLUMNS = ["id", "host_name", "byor", "start_date", "end_date", "monitoring", "provider_name"]
+
+def _expired_tag_formatter(value):
+    # `value` is the row's is_expired boolean
+    if value:
+        return Markup('<span class="label label-danger">Expired</span>')
+    return Markup('<span class="label label-success">Active</span>')
+
+
+_LIST_COLUMNS = [
+    "id",
+    "host_name",
+    "byor",
+    "start_date",
+    "end_date",
+    "monitoring",
+    "provider_name",
+    "is_expired",
+]
 _BASE_ORDER = ("id", "desc")
+_LABEL_COLUMNS = {"is_expired": "Status"}
+_FORMATTERS_COLUMNS = {"is_expired": _expired_tag_formatter}
 
 
 class ManagedRessourcelView(ModelView):
@@ -16,6 +36,8 @@ class ManagedRessourcelView(ModelView):
     datamodel = SQLAInterface(ManagedRessource)
     list_columns = _LIST_COLUMNS + ["ressource_type"]
     base_order = _BASE_ORDER
+    label_columns = _LABEL_COLUMNS
+    formatters_columns = _FORMATTERS_COLUMNS
 
 
 db.create_all()
@@ -32,6 +54,8 @@ class VPSManagedRessourcelView(ModelView):
     datamodel = SQLAInterface(ManagedRessource)
     list_columns = _LIST_COLUMNS + ["ip", "cd_agent", "gitops_tool", "backup_automation"]
     base_order = _BASE_ORDER
+    label_columns = _LABEL_COLUMNS
+    formatters_columns = _FORMATTERS_COLUMNS
     base_filters = [["ressource_type", FilterEqual, "vps"]]
 
 
@@ -49,6 +73,8 @@ class WebHostingManagedRessourcelView(ModelView):
     datamodel = SQLAInterface(ManagedRessource)
     list_columns = _LIST_COLUMNS + ["ip"]
     base_order = _BASE_ORDER
+    label_columns = _LABEL_COLUMNS
+    formatters_columns = _FORMATTERS_COLUMNS
     base_filters = [["ressource_type", FilterEqual, "web_hosting"]]
 
 
@@ -66,6 +92,8 @@ class DNSManagedRessourcelView(ModelView):
     datamodel = SQLAInterface(ManagedRessource)
     list_columns = _LIST_COLUMNS
     base_order = _BASE_ORDER
+    label_columns = _LABEL_COLUMNS
+    formatters_columns = _FORMATTERS_COLUMNS
     base_filters = [["ressource_type", FilterEqual, "dns"]]
 
 
@@ -83,6 +111,8 @@ class S3ManagedRessourcelView(ModelView):
     datamodel = SQLAInterface(ManagedRessource)
     list_columns = _LIST_COLUMNS
     base_order = _BASE_ORDER
+    label_columns = _LABEL_COLUMNS
+    formatters_columns = _FORMATTERS_COLUMNS
     base_filters = [["ressource_type", FilterEqual, "s3"]]
 
 
@@ -100,6 +130,8 @@ class EmailManagedRessourcelView(ModelView):
     datamodel = SQLAInterface(ManagedRessource)
     list_columns = _LIST_COLUMNS
     base_order = _BASE_ORDER
+    label_columns = _LABEL_COLUMNS
+    formatters_columns = _FORMATTERS_COLUMNS
     base_filters = [["ressource_type", FilterEqual, "email"]]
 
 
