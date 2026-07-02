@@ -3,6 +3,9 @@ from app import db
 from app.service_api.models.api_services_model import ApiService
 from app.service_apps.models.app_version_model import Version
 from app.service_apps.models.apps_services_model import AppService
+from app.service_ressources.models.services_ressources_model import (  # adjust import path
+    RessourceService,
+)
 
 
 def seed_api_services():
@@ -20,6 +23,18 @@ def seed_api_services():
             "is_eligible": True,
             "price_category": "monthly",
             "service_slug": "open-meteo",
+        },
+    ]
+    ressource_services = [
+        {
+            "name": "VPS",
+            "short_description": "Virtual Private Server.",
+            "description": "A virtualized server environment for hosting applications and services.",
+            "documentation_url": "#",
+            "unit_price": 9.99,
+            "is_published": True,
+            "is_eligible": True,
+            "price_category": "monthly",
         },
     ]
     app_services = [
@@ -53,6 +68,19 @@ def seed_api_services():
 
     db.session.commit()
     print("API services seeded.")
+
+    for data in ressource_services:
+        exists = db.session.query(RessourceService).filter_by(name=data["name"]).first()
+        if exists:
+            print(f"Skipped existing RessourceService: {data['name']}")
+            continue
+
+        service = RessourceService(**data)
+        db.session.add(service)
+        print(f"Added RessourceService: {data['name']}")
+
+    db.session.commit()
+    print("Ressource services seeded.")
 
     for data in app_services:
         exists = db.session.query(AppService).filter_by(name=data["name"]).first()

@@ -5,6 +5,9 @@ from app.core.models.service_plan_models import ServicePlan
 from app.core.models.service_plan_option_models import ServicePlanOption
 from app.service_api.models.api_services_model import ApiService  # adjust import path
 from app.service_apps.models.apps_services_model import AppService  # adjust import path
+from app.service_ressources.models.services_ressources_model import (  # adjust import path
+    RessourceService,
+)
 
 
 def seed_service_plans():
@@ -12,14 +15,16 @@ def seed_service_plans():
     pro = db.session.query(Plan).filter_by(name="Pro").first()
     basic_odoo = db.session.query(Plan).filter_by(name="Basic odoo").first()
     pro_odoo = db.session.query(Plan).filter_by(name="Pro odoo").first()
+    basic_ressource = db.session.query(Plan).filter_by(name="Basic VPS").first()
 
     service_weather = db.session.query(ApiService).filter_by(apisix_group_id="open-meteo").first()
     service_odoo = db.session.query(AppService).filter_by(name="Odoo ERP").first()
+    service_ressource = db.session.query(RessourceService).filter_by(name="VPS").first()
 
-    if not service_weather or not service_odoo:
+    if not service_weather or not service_odoo or not service_ressource:
         raise RuntimeError("No Service found — seed Service table first.")
 
-    if not basic or not pro:
+    if not basic or not pro or not basic_odoo or not pro_odoo or not basic_ressource:
         raise RuntimeError("Plans not found — run seed_plans() first.")
 
     cpu = db.session.query(ServicePlanOption).filter_by(option_type="cpu").first()
@@ -87,15 +92,15 @@ def seed_service_plans():
             "price": 1900.99,
             "preparation_time": 24,
             "tva_rate": 0.0,
-            "plan": pro_odoo,
+            "plan": basic_ressource,
             "is_trial": False,
             "subscription_category": "monthly",
-            "service_plan_type": "app",
+            "service_plan_type": "ressource",
             "is_published": True,
             "display_on_app": True,
             "priority": 2,
             "options": [cpu, ram, disk],
-            "service": service_odoo,
+            "service": service_ressource,
         },
     ]
 

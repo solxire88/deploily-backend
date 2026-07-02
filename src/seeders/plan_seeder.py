@@ -11,6 +11,9 @@ def seed_plans():
         {"name": "Basic odoo", "description": "Basic plan app"},
         {"name": "Pro odoo", "description": "Pro plan app"},
         {"name": "Premium odoo", "description": "Premium plan app"},
+        {"name": "Basic VPS", "description": "Basic plan VPS"},
+        {"name": "Pro VPS", "description": "Pro plan VPS"},
+        {"name": "Premium VPS", "description": "Premium plan VPS"},
     ]
 
     for plan in plans:
