@@ -38,7 +38,7 @@ _service_plan_value_display_columns = [
 
 class ServicePlanModelApi(ModelRestApi):
     resource_name = "service-plan"
-    base_order = ("price", "asc")
+    base_order = ("priority", "asc")
     datamodel = SQLAInterface(ServicePlan)
     add_columns = _service_plan_value_display_columns
     list_columns = _service_plan_value_display_columns
