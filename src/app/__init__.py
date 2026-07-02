@@ -65,7 +65,13 @@ celery = Celery(
     backend=app.config["CELERY_RESULT_BACKEND"],
 )
 celery.conf.update(app.config)
+# ---------------------------------------------------
+# Register CLI commands  ✅ VERY IMPORTANT
+# ---------------------------------------------------
 
+from cli.seed import seed
+
+app.cli.add_command(seed)
 
 if __name__ == "__main__":
     app.run(debug=True)

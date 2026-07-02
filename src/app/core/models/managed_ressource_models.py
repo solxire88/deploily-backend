@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from flask_appbuilder import Model
 from sqlalchemy import Boolean, Column, Date, Enum, ForeignKey, Integer, String
@@ -94,3 +94,43 @@ class ManagedRessource(Model):
     def provider_name(self):
         if self.ressource_service_plan and self.ressource_service_plan.provider_info:
             return self.ressource_service_plan.provider_info.get("name", "N/A")
+
+    @staticmethod
+    def _as_date(value):
+        """
+        Coerce a date or datetime into a plain date.
+        Some related models (e.g. Subscription.start_date) may be stored
+        as DateTime rather than Date, which otherwise breaks comparisons
+        against date.today() with "can't compare datetime.datetime to
+        datetime.date".
+        """
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.date()
+        return value
+
+    @property
+    def computed_end_date(self):
+        """Use explicit end_date if set, otherwise derive from the first subscription."""
+        if self.end_date:
+            return self._as_date(self.end_date)
+
+        if not self.subscriptions:
+            return None
+
+        subs_with_start = [s for s in self.subscriptions if s.start_date]
+        if not subs_with_start:
+            return None
+
+        first_subscription = min(subs_with_start, key=lambda s: self._as_date(s.start_date))
+        start = self._as_date(first_subscription.start_date)
+        duration_months = first_subscription.duration_month or 0
+        return start + timedelta(days=30 * duration_months)
+
+    @property
+    def is_expired(self):
+        end = self.computed_end_date
+        if not end:
+            return False
+        return end < date.today()
