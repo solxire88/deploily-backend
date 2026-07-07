@@ -21,6 +21,19 @@ class ContactUs(Model):
 
     contact_us_status = Column(Enum("new", "lead", "junk", name="contact_us_status"), default="new")
     created_on = Column(DateTime, default=lambda: datetime.now(), nullable=True)
+    service_plan_id = Column(Integer, ForeignKey("service_plan.id"))
+    service_plan = relationship(
+        "ServicePlan",
+        foreign_keys=[service_plan_id],
+        back_populates="service_plan_contacts",
+    )
+
+    ressource_plan_id = Column(Integer, ForeignKey("service_plan.id"))
+    ressource_plan = relationship(
+        "ServicePlan",
+        foreign_keys=[ressource_plan_id],
+        back_populates="ressource_plan_contacts",
+    )
 
     def __repr__(self):
         return self.name
