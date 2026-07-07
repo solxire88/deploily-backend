@@ -36,6 +36,17 @@ class ServicePlan(Model):
         back_populates="service_plans",
         order_by=ServicePlanOption.sequence,
     )
+    # two distinct attribute names instead of both called "contact_us"
+    service_plan_contacts = relationship(
+        "ContactUs",
+        foreign_keys="ContactUs.service_plan_id",
+        back_populates="service_plan",
+    )
+    ressource_plan_contacts = relationship(
+        "ContactUs",
+        foreign_keys="ContactUs.ressource_plan_id",
+        back_populates="ressource_plan",
+    )
 
     @property
     def provider_info(self):

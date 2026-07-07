@@ -14,6 +14,8 @@ from app.utils.utils import get_user
 
 _logger = logging.getLogger(__name__)
 _contact_us_display_columns = ["name", "email", "message", "phone", "service"]
+
+
 class ContactUSModelApi(ModelRestApi):
     resource_name = "contact-us"
     base_order = ("id", "desc")
@@ -95,6 +97,10 @@ class PublicContactUSModelApi(BaseApi):
                     name:
                       type: string
                       description: name
+                    service_plan_id:
+                      type: integer
+                    ressource_plan_id:
+                      type: integer
           responses:
             200:
               description: Contact created successfully
@@ -122,6 +128,8 @@ class PublicContactUSModelApi(BaseApi):
                 name=data.get("name"),
                 phone=data.get("phone"),
                 service_id=data.get("service_id"),
+                service_plan_id=data.get("service_plan_id"),
+                ressource_plan_id=data.get("ressource_plan_id"),
             )
             db.session.add(contact_us)
             db.session.commit()
@@ -135,6 +143,8 @@ class PublicContactUSModelApi(BaseApi):
                     "email": contact_us.email,
                     "phone": contact_us.phone,
                     "service_id": contact_us.service_id,
+                    "service_plan_id": contact_us.service_plan_id,
+                    "ressource_plan_id": contact_us.ressource_plan_id,
                 },
             )
 
