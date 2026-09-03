@@ -2,7 +2,7 @@
 
 import logging
 
-from flask import current_app, render_template, request
+from flask import current_app, request
 from flask_appbuilder.api import ModelRestApi, expose, protect
 from flask_appbuilder.models.sqla.filters import FilterEqualFunction
 from flask_appbuilder.models.sqla.interface import SQLAInterface
@@ -12,7 +12,7 @@ from app import appbuilder, db
 from app.core.models.service_plan_models import ServicePlan
 from app.service_ressources.models.affiliation_model import Affiliation
 from app.service_ressources.models.services_ressources_model import RessourceService
-from app.services.mail_service import send_and_log_email
+from app.services.mail_service import render_email, send_and_log_email
 from app.utils.utils import get_user
 
 _logger = logging.getLogger(__name__)
@@ -149,28 +149,28 @@ class AffiliationModelApi(ModelRestApi):
 
         # -------- Email templates --------
         # Email to user
-        user_email_body = render_template(
-            "emails/user_affiliation.html",
+        user_subject, user_email_body = render_email(
+            "user_affiliation",
             user=user,
             provider=provider,
             total_price=total_price,
         )
         send_and_log_email(
             to=user.email,
-            subject=f"Nouvelle affiliation dans deploily.cloud",
+            subject=user_subject,
             body=user_email_body,
         )
 
         # Email to internal team
-        deploily_email_body = render_template(
-            "emails/deploily_affiliation.html",
+        deploily_subject, deploily_email_body = render_email(
+            "deploily_affiliation",
             user=user,
             provider=provider,
             total_price=total_price,
         )
         send_and_log_email(
             to=current_app.config["NOTIFICATION_EMAIL"],
-            subject=f"New affiliation between the user {user.first_name} and the provider {provider.name}",
+            subject=deploily_subject,
             body=deploily_email_body,
         )
 

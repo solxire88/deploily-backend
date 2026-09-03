@@ -2,7 +2,7 @@
 
 import logging
 
-from flask import current_app, g, render_template
+from flask import current_app, g
 from flask_appbuilder.const import LOGMSG_WAR_SEC_LOGIN_FAILED
 from flask_appbuilder.security.api import SecurityApi
 from flask_appbuilder.security.sqla.manager import SecurityManager
@@ -103,6 +103,7 @@ class CustomSsoSecurityManager(SecurityManager):
         from app.core.models.mail_models import Mail
         from app.core.models.payment_models import Payment
         from app.core.models.payment_profile_models import PaymentProfile
+        from app.services.mail_service import render_email
 
         username = jwt_data["preferred_username"]
         email = jwt_data["email"]
@@ -136,14 +137,14 @@ class CustomSsoSecurityManager(SecurityManager):
                 )
                 db.session.add(payment)
                 db.session.commit()
-                user_email_body = render_template(
-                    "emails/create_user.html",
+                subject, user_email_body = render_email(
+                    "create_user",
                     user=user,
                     username=user.username,
                 )
 
                 email = Mail(
-                    title=f"New User Created {user.username}",
+                    title=subject,
                     body=user_email_body,
                     email_to=current_app.config["NOTIFICATION_EMAIL"],
                     email_from=current_app.config["NOTIFICATION_EMAIL"],

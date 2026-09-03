@@ -3,11 +3,10 @@ from datetime import datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 from flask import current_app as app
-from flask import render_template
 
 from app import app, db, scheduler
 from app.core.models.subscription_models import Subscription
-from app.services.mail_service import send_and_log_email
+from app.services.mail_service import render_email, send_and_log_email
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -62,9 +61,8 @@ def notify_expiring_subscriptions():
                         f"[NOTIFY] Subscription ID {sub.id} for user {user.username} expires in {days_difference} days."
                     )
 
-                    subject = f"Your subscription will expire in {days_difference} days"
-                    body = render_template(
-                        "emails/subscription_expiring.html",
+                    subject, body = render_email(
+                        "subscription_expiring",
                         user=user,
                         subscription=sub,
                         days=days_difference,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import current_app, render_template
+from flask import current_app
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Text, event
 from sqlalchemy.orm import Session as SASession
 from sqlalchemy.orm import object_session, relationship
@@ -8,6 +8,7 @@ from sqlalchemy.orm import object_session, relationship
 from app import db
 from app.core.models import Subscription
 from app.core.models.mail_models import Mail
+from app.services.mail_service import render_email
 
 
 class SubscriptionAppService(Subscription):
@@ -139,17 +140,15 @@ def send_deployed_app_emails(session):
                 continue
 
             if target.application_status == "deployed":
-                template = "emails/user_application_deployed.html"
-                title = "Your application has been deployed"
+                template_key = "user_application_deployed"
                 message = ""
             else:
-                template = "emails/user_application_failed.html"
-                title = "Your application has failed"
+                template_key = "user_application_failed"
                 message = target.deployment_error
 
             # Render email body
-            user_body = render_template(
-                template, user=target.created_by, application=target.name, message=message
+            title, user_body = render_email(
+                template_key, user=target.created_by, application=target.name, message=message
             )
 
             # Create Mail object

@@ -1,6 +1,7 @@
 import click
 from flask.cli import with_appcontext
 
+from seeders.email_template_seeder import seed_email_templates
 from seeders.plan_seeder import seed_plans
 from seeders.service_plan_option_seeder import seed_service_plan_options
 from seeders.service_plan_seeder import seed_service_plans
@@ -48,6 +49,13 @@ def seed_versions_command():
     click.echo("✅ Versions seeded")
 
 
+@seed.command("email-templates")
+@with_appcontext
+def seed_email_templates_command():
+    seed_email_templates()
+    click.echo("✅ Email templates seeded")
+
+
 @seed.command("all")
 @with_appcontext
 def all_seed():
@@ -57,4 +65,5 @@ def all_seed():
     seed_service_plan_options()
     seed_api_services()
     seed_service_plans()
+    seed_email_templates()
     click.echo("🚀 All seeders executed successfully")

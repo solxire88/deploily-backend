@@ -1,7 +1,7 @@
 import logging
 import os
 
-from flask import current_app, jsonify, render_template, request
+from flask import current_app, jsonify, request
 from flask_appbuilder.api import ModelRestApi, expose, protect
 from flask_appbuilder.models.sqla.filters import FilterEqualFunction
 from flask_appbuilder.models.sqla.interface import SQLAInterface
@@ -11,6 +11,7 @@ from app import appbuilder, db
 from app.core.celery_tasks.send_mail_task import send_mail
 from app.core.models.mail_models import Mail
 from app.core.models.support_ticket_models import SupportTicket
+from app.services.mail_service import render_email
 from app.utils.utils import get_user, process_and_save_image
 
 _logger = logging.getLogger(__name__)
@@ -63,12 +64,12 @@ class SupportTicketModelApi(ModelRestApi):
         """
         try:
             user = current_user
-            support_tickert_template = render_template(
-                "emails/support_ticket.html", item=item, user=user
+            subject, support_tickert_template = render_email(
+                "support_ticket", item=item, user=user
             )
 
             email = Mail(
-                title=f"New Support Ticket Created By {user.first_name} {user.last_name}",
+                title=subject,
                 body=support_tickert_template,
                 email_to=current_app.config["SUPPORT_EMAIL"],  # ✅ SUPPORT TEAM EMAIL
                 email_from=current_app.config["SUPPORT_EMAIL"],
@@ -76,14 +77,14 @@ class SupportTicketModelApi(ModelRestApi):
             )
             db.session.add(email)
             if user.email:
-                user_template = render_template(
-                    "emails/support_ticket_user.html",
+                user_subject, user_template = render_email(
+                    "support_ticket_user",
                     item=item,
                     user=user,
                 )
 
                 user_email = Mail(
-                    title="Your support ticket has been created successfully",
+                    title=user_subject,
                     body=user_template,
                     email_to=user.email,  # ✅ USER EMAIL
                     email_from=current_app.config["SUPPORT_EMAIL"],

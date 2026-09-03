@@ -12,6 +12,7 @@ from .subscription_models import Subscription
 from .support_ticket_models import SupportTicket
 from .support_ticket_response_models import SupportTicketResponse
 from .mail_models import Mail
+from .email_template_model import EmailTemplate
 from .comment_models import Comment
 from .rating_models import Score
 from .media_models import Media

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import current_app, render_template
+from flask import current_app
 from flask_appbuilder.api import expose, protect
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_jwt_extended import current_user, jwt_required
@@ -9,6 +9,7 @@ from app import appbuilder, db
 from app.core.celery_tasks.send_mail_task import send_mail
 from app.core.controllers.subscription_controllers import SubscriptionModelApi
 from app.core.models.mail_models import Mail
+from app.services.mail_service import render_email
 from app.service_apps.models.app_service_subscription_model import (
     SubscriptionAppService,
 )
@@ -117,8 +118,8 @@ class AppServiceSubscriptionModelApi(SubscriptionModelApi):
 
         if item.required_restart and item.application_status == "processing":
             # Prepare email body using template
-            email_body = render_template(
-                "emails/restart_application.html",
+            subject, email_body = render_email(
+                "restart_application",
                 user=user,
                 application=item.service_plan.service.name,
                 subscription_id=item.id,
@@ -126,7 +127,7 @@ class AppServiceSubscriptionModelApi(SubscriptionModelApi):
 
             # Create and persist the email record
             email = Mail(
-                title=f"Your application is restarting, {user.username}",
+                title=subject,
                 body=email_body,
                 email_to=notify_email,
                 email_from=notify_email,
@@ -140,8 +141,8 @@ class AppServiceSubscriptionModelApi(SubscriptionModelApi):
 
             print("### Email sent to:", notify_email)
 
-            user_email_body = render_template(
-                "emails/user_restart_application.html",
+            user_subject, user_email_body = render_email(
+                "user_restart_application",
                 user=user,
                 application=item.service_plan.service.name,
                 subscription_id=item.id,
@@ -149,7 +150,7 @@ class AppServiceSubscriptionModelApi(SubscriptionModelApi):
 
             # Create and persist the email record
             email = Mail(
-                title=f"Your application is restarting, {user.username}",
+                title=user_subject,
                 body=user_email_body,
                 email_to=user.email,
                 email_from=notify_email,

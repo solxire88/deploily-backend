@@ -2,14 +2,13 @@ import logging
 from datetime import date
 
 from flask import current_app as app
-from flask import render_template
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import text
 
 from app import app, db, scheduler
 from app.core.models.support_ticket_models import SupportTicket
 from app.core.models.support_ticket_response_models import SupportTicketResponse
-from app.services.mail_service import send_and_log_email
+from app.services.mail_service import render_email, send_and_log_email
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -114,37 +113,33 @@ def auto_close_support_tickets() -> dict:
                     },
                 )
                 # _send_email(customer_email, CLOSURE_SUBJECT, CLOSURE_BODY, ticket)
-                subject = f"Your support ticket #{ticket.id} has been closed"
-                admin_body = render_template(
-                    "emails/admin_support_ticket_closed.html",
+                admin_subject, admin_body = render_email(
+                    "admin_support_ticket_closed",
                     ticket=ticket,
                 )
+                send_and_log_email(support_mail, admin_subject, admin_body)
 
-                send_and_log_email(support_mail, subject, admin_body)
-                User_body = render_template(
-                    "emails/user_support_ticket_closed.html",
+                user_subject, user_body = render_email(
+                    "user_support_ticket_closed",
                     ticket=ticket,
                 )
-                send_and_log_email(customer_email, subject, User_body)
+                send_and_log_email(customer_email, user_subject, user_body)
 
                 closed += 1
 
             # ── Day 6: warn the customer ──────────────────────────────────────────
             elif days_since_response == 6:
-                subject = f"Reminder: Your support ticket #{ticket.id} is awaiting your response"
-                admin_body = render_template(
-                    "emails/admin_support_ticket_warning.html",
+                admin_subject, admin_body = render_email(
+                    "admin_support_ticket_warning",
                     ticket=ticket,
                 )
-                send_and_log_email(
-                    support_mail, f"Ticket #{ticket.id} warning — no reply in 6 days", admin_body
-                )
+                send_and_log_email(support_mail, admin_subject, admin_body)
 
-                user_body = render_template(
-                    "emails/user_support_ticket_warning.html",
+                user_subject, user_body = render_email(
+                    "user_support_ticket_warning",
                     ticket=ticket,
                 )
-                send_and_log_email(customer_email, subject, user_body)
+                send_and_log_email(customer_email, user_subject, user_body)
                 warned += 1
 
             try:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import current_app, flash, redirect, render_template
+from flask import current_app, flash, redirect
 from flask_appbuilder import ModelView, expose, has_access
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 
@@ -8,6 +8,7 @@ from app import appbuilder, db
 from app.core.celery_tasks.send_mail_task import send_mail
 from app.core.models.mail_models import Mail
 from app.core.models.support_ticket_response_models import SupportTicketResponse
+from app.services.mail_service import render_email
 
 
 class SupportTicketResponseModelView(ModelView):
@@ -41,9 +42,9 @@ class SupportTicketResponseModelView(ModelView):
             ticket = response
             user = ticket.support_ticket.created_by
 
-            admin_body = render_template("emails/support_ticket_response_admin.html", ticket=ticket)
+            admin_subject, admin_body = render_email("support_ticket_response_admin", ticket=ticket)
             admin_email = Mail(
-                title=f"Support Ticket #{ticket.id} - New Response",
+                title=admin_subject,
                 body=admin_body,
                 email_to=current_app.config["SUPPORT_EMAIL"],
                 email_from=current_app.config["SUPPORT_EMAIL"],
@@ -54,12 +55,12 @@ class SupportTicketResponseModelView(ModelView):
 
             if user.email:
                 print(f"User email: {user.email}")
-                user_body = render_template(
-                    "emails/support_ticket_response_user.html", ticket=ticket
+                user_subject, user_body = render_email(
+                    "support_ticket_response_user", ticket=ticket
                 )
 
                 user_email = Mail(
-                    title=f"Your Support Ticket #{ticket.id} Has a New Response",
+                    title=user_subject,
                     body=user_body,
                     email_to=user.email,
                     email_from=current_app.config["SUPPORT_EMAIL"],

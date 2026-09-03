@@ -30,7 +30,7 @@ services:
 
   db:
     container_name: deploily-backend-db
-    image: postgres:latest
+    image: postgres:15
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
@@ -67,7 +67,7 @@ services:
 
   etcd:
     container_name: deploily-backend-etcd
-    image: bitnami/etcd:3.5.11
+    image: bitnamilegacy/etcd:3.5.11
     environment:
       ETCD_ENABLE_V2: 'true'
       ALLOW_NONE_AUTHENTICATION: 'yes'
@@ -83,8 +83,8 @@ services:
     image: redis:7.2.3-bookworm
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
     # network_mode: service:db
-    ports:
-      - "6379:6379"
+    # ports:
+      # - "6379:6379"
 
   
   keycloakdb:

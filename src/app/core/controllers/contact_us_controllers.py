@@ -2,7 +2,7 @@
 
 import logging
 
-from flask import current_app, render_template, request
+from flask import current_app, request
 from flask_appbuilder.api import BaseApi, ModelRestApi, expose
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 
@@ -10,6 +10,7 @@ from app import appbuilder, db
 from app.core.celery_tasks.send_mail_task import send_mail
 from app.core.models.contact_us_models import ContactUs
 from app.core.models.mail_models import Mail
+from app.services.mail_service import render_email
 from app.utils.utils import get_user
 
 _logger = logging.getLogger(__name__)
@@ -41,10 +42,10 @@ class ContactUSModelApi(ModelRestApi):
 
         try:
 
-            contact_us_template = render_template("emails/contact_us.html", item=item)
+            subject, contact_us_template = render_email("contact_us", item=item)
 
             email = Mail(
-                title=f"New Contact US Created by {item.name}",
+                title=subject,
                 body=contact_us_template,
                 email_to=current_app.config["NOTIFICATION_EMAIL"],
                 email_from=current_app.config["NOTIFICATION_EMAIL"],

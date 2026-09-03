@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from flask import flash, redirect, render_template, url_for
+from flask import flash, redirect, url_for
 from flask_appbuilder import ModelView, action
 from flask_appbuilder.actions import action
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 
 from app import appbuilder
 from app.service_ressources.models.affiliation_model import Affiliation
-from app.services.mail_service import send_and_log_email
+from app.services.mail_service import render_email, send_and_log_email
 
 
 class AffiliationView(ModelView):
@@ -52,8 +52,8 @@ class AffiliationView(ModelView):
             user = affiliation.created_by
 
             if provider and provider.mail_partnership:
-                provider_email_body = render_template(
-                    "emails/provider_affiliation.html",
+                provider_subject, provider_email_body = render_email(
+                    "provider_affiliation",
                     user=user,
                     provider=provider,
                     total_price=affiliation.total_price,
@@ -62,7 +62,7 @@ class AffiliationView(ModelView):
                 )
                 send_and_log_email(
                     to=provider.mail_partnership,
-                    subject="Nouvelle affiliation via deploily.cloud",
+                    subject=provider_subject,
                     body=provider_email_body,
                 )
 

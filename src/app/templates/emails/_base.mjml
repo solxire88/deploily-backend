@@ -1,0 +1,45 @@
+<mjml>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Segoe UI, Tahoma, Geneva, Verdana, sans-serif" />
+    </mj-attributes>
+    <mj-style inline="inline">
+      .content h2 { color: #0d6efd; margin-top: 0; }
+      .content h4 { color: #212529; }
+      .content ul { padding-left: 20px; }
+      .content a { color: #0d6efd; text-decoration: none; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f4f6f8">
+    <mj-section background-color="#0d1014" padding="20px 0">
+      <mj-column>
+        <mj-image
+          src="https://console.deploily.cloud/_next/image?url=%2Fimages%2Flogo_name.png&amp;w=256&amp;q=75"
+          alt="Logo Deploily"
+          width="180px"
+        />
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" padding="30px" border-radius="0 0 8px 8px">
+      <mj-column>
+        <mj-text color="#212529" font-size="15px" line-height="1.6">
+          <div class="content">{{ content|safe }}</div>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#f1f3f5" padding="20px">
+      <mj-column>
+        <mj-text align="center" color="#6c757d" font-size="13px">
+          <p><strong>Deploily</strong> – Deploy to sovereign infrastructure</p>
+          <p>
+            📧 <a href="mailto:deploily@transformatek.dz">deploily@transformatek.dz</a>
+            | 🌐 <a href="https://console.deploily.cloud">https://console.deploily.cloud</a>
+          </p>
+          <p>📍 N°21, Bloc E3, Ilot 10, Cité 220 logments CNEP, Ain Témouchent, Algérie</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

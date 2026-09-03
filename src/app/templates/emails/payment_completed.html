@@ -1,28 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <style>
-    body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-    .container { max-width: 600px; margin: auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .header { background-color: #22c55e; padding: 24px; text-align: center; }
-    .header h1 { color: #ffffff; margin: 0; font-size: 22px; }
-    .body { padding: 24px; }
-    .body p { color: #444; line-height: 1.6; }
-    .table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    .table td { padding: 10px 12px; border: 1px solid #e5e7eb; font-size: 14px; color: #333; }
-    .table td:first-child { background-color: #f9fafb; font-weight: bold; width: 40%; }
-    .badge { display: inline-block; background-color: #dcfce7; color: #16a34a; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: bold; }
-    .footer { background-color: #f9fafb; padding: 16px 24px; text-align: center; font-size: 12px; color: #9ca3af; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>✅ Payment Completed</h1>
-    </div>
-    <div class="body">
-      <p>Hello Admin,</p>
+<p>Hello Admin,</p>
       <p>A payment has been <strong>successfully completed</strong>. Here are the details:</p>
 
       <table class="table">
@@ -67,10 +43,3 @@
           <td>{{ item.start_date.strftime("%Y-%m-%d %H:%M:%S") if item.start_date else "—" }}</td>
         </tr>
       </table>
-    </div>
-    <div class="footer">
-      This is an automated notification — please do not reply to this email.
-    </div>
-  </div>
-</body>
-</html>

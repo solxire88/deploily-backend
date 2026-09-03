@@ -2,7 +2,7 @@
 import logging
 from datetime import datetime
 
-from flask import current_app, render_template
+from flask import current_app
 from flask_appbuilder import Model
 from flask_appbuilder.models.mixins import AuditMixin, ImageColumn
 from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer, String, event
@@ -59,6 +59,7 @@ def payment_after_update(mapper, connection, target):
     from sqlalchemy import inspect
 
     from app.core.models.mail_models import Mail
+    from app.services.mail_service import render_email
 
     state = inspect(target)
     history = state.attrs.status.history
@@ -71,12 +72,12 @@ def payment_after_update(mapper, connection, target):
         if new_status == "completed":
 
             try:
-                body = render_template("emails/payment_completed.html", item=target)
+                subject, body = render_email("payment_completed", item=target)
                 result = connection.execute(
                     Mail.__table__.insert()
                     .returning(Mail.id)
                     .values(
-                        title=f"✅ New Payment Completed — {target.amount}",
+                        title=subject,
                         body=body,
                         email_to=current_app.config["NOTIFICATION_EMAIL"],
                         email_from=current_app.config["NOTIFICATION_EMAIL"],

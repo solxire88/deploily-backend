@@ -15,6 +15,7 @@ from . import support_ticket_views
 from . import support_ticket_response_views
 from . import my_favorites_views
 from . import mail_views
+from . import email_template_views
 from . import comment_views
 from . import advertisment_views
 from . import rating_views
