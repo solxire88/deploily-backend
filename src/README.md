@@ -11,6 +11,7 @@
 - [Keycloak Configuration](#keycloak-configuration)
 - [Database Migrations](#database-migrations)
 - [Running the Application](#running-the-application)
+- [Email Configuration](#email-configuration)
 - [Database Management](#database-management)
 - [Troubleshooting](#troubleshooting)
 ---
@@ -196,6 +197,44 @@ flask run
 Then open [http://localhost:5000](http://localhost:5000) in your browser.
  
 **Login credentials:** `admin` / `admin`
+ 
+---
+ 
+## Email Configuration
+ 
+The app sends transactional emails (new user, subscriptions, support tickets, payments, expiry reminders, etc.) via SMTP. **Nothing is configured by default** — add these to your `.env` before testing anything email-related:
+ 
+```env
+export MAIL_HOST="smtp.gmail.com"
+export MAIL_PORT="465"
+export MAIL_USER="your-email@example.com"
+export MAIL_PASS="your-app-password"
+export NOTIFICATION_EMAIL="your-email@example.com"
+export SUPPORT_EMAIL="your-email@example.com"
+```
+ 
+> **Your provider must support port 465 directly.** The code uses `smtplib.SMTP_SSL(...)`, which connects already-encrypted — a provider whose port 465 expects a different handshake will fail to connect. Gmail works well for local dev: enable 2-Step Verification on the account, then generate an [App Password](https://myaccount.google.com/apppasswords) — your normal account password will not work over SMTP.
+ 
+- `NOTIFICATION_EMAIL` — recipient for most internal/admin notifications (new user, payment completed, new subscription, contact-us, etc.)
+- `SUPPORT_EMAIL` — recipient specifically for the support-ticket flow (both the "new ticket" and cron-based auto-close/warning admin copies)
+- `MAIL_USER` is also used as the visible `From` address on every email — if your provider requires sender verification, make sure this address is verified there.
+ 
+### Editable Email Templates
+ 
+All email subjects/bodies live in the database (`EmailTemplate` model), not in code — editable from the FAB admin panel without a deploy:
+ 
+```
+http://localhost:5000/admin/email-template/list
+```
+ 
+On a fresh database, seed the initial 24 templates from their default content:
+ 
+```bash
+flask seed email-templates
+```
+(also included in `flask seed all`). This is idempotent — safe to re-run, it only inserts templates that don't already exist.
+ 
+Admins only edit the message content — layout/branding comes from one of three shared MJML skeletons (`src/app/templates/emails/_base*.mjml`), applied automatically per template based on its key (standard branded, payment-receipt style, or plain internal notification).
  
 ---
  
