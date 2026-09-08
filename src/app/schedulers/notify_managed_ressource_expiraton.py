@@ -61,8 +61,17 @@ def notify_managed_ressource_expiration():
                         days=days_remaining,
                         expiration_date=res.end_date.strftime("%Y-%m-%d"),
                     )
-
                     send_and_log_email(user.email, subject, body)
+
+                    admin_subject, admin_body = render_email(
+                        "admin_resource_expiring_soon",
+                        user=user,
+                        res=res,
+                        days=days_remaining,
+                        expiration_date=res.end_date.strftime("%Y-%m-%d"),
+                    )
+                    send_and_log_email(app.config["NOTIFICATION_EMAIL"], admin_subject, admin_body)
+
                     sent_ressource_notifications.add(key)
 
                 except Exception as e:

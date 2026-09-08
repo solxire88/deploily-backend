@@ -35,6 +35,7 @@ _SUBJECTS = {
     "user_subscription_trial": "Votre période d’essai sur deploily.cloud a commencé",
     "subscription_expiring": "Your subscription will expire in {{ days }} days",
     "managed_ressource_expiring": "Managed Resource Subscription Expiring in {{ days }} Days",
+    "admin_resource_expiring_soon": "Resource Expiring Soon – {{ res.host_name }} ({{ user.first_name }})",
 }
 
 
