@@ -2,205 +2,726 @@
 {% import 'appbuilder/baselib.html' as baselib %}
 
 {% block content %}
-<h2>{{ _('Admin Dashboard') }}</h2>
+<style>
+    :root {
+        --brand-blue: #0d6efd;
+        --brand-blue-dark: #0a58ca;
+        --brand-blue-light: #eaf2ff;
+        --brand-orange: #f26522;
+        --brand-orange-dark: #c94f13;
+        --brand-orange-light: #fff1e8;
+        --neutral-text: #2b2f33;
+        --neutral-muted: #7a828a;
+        --neutral-border: #e9ecef;
+        --good: #2e8b57;
+        --bad: #c0392b;
+    }
 
-<div class="row" style="margin-bottom: 15px;">
+    .dashboard-header {
+        display: flex; align-items: center; justify-content: flex-start; gap: 14px;
+        padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--neutral-border);
+    }
+    .dashboard-header img { height: 34px; width: auto; }
+    h2.dashboard-title { flex: 1; text-align: center; font-weight: 700; color: var(--neutral-text); margin: 0; }
+
+    /* ---- Flat card, no border/box -- just whitespace + a thin title rule ---- */
+    .db-card { background: transparent; margin-bottom: 20px; }
+    .db-card-title {
+        font-size: 14px; font-weight: 600; color: var(--neutral-text);
+        padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid var(--neutral-border);
+    }
+    .db-card-title a { float: right; font-size: 12px; font-weight: 400; color: var(--neutral-muted); }
+    .db-card-title a:hover { color: var(--brand-blue); }
+
+    /* ---- Chart cards -- centered title, deliberate breathing room around the canvas ---- */
+    .chart-card { padding: 4px 8px 8px; }
+    .chart-card-title { text-align: center; border-bottom: none; margin-bottom: 0; font-size: 17px; font-weight: 700; }
+    .chart-card-title a { float: none; font-size: inherit; font-weight: inherit; color: var(--neutral-text); text-decoration: none; }
+    .chart-card-title a:hover, .chart-card-title a:focus { color: var(--brand-blue); text-decoration: none; }
+    .chart-canvas { height: 280px; padding: 0 4px 0; }
+
+    /* ---- Zero-gap 2x2 grid, light hairline dividers instead of card gaps ---- */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .chart-grid .chart-card { margin-bottom: 0; padding: 16px 20px; }
+    .chart-cell-tl { border-right: 1px solid var(--neutral-border); border-bottom: 1px solid var(--neutral-border); }
+    .chart-cell-tr { border-bottom: 1px solid var(--neutral-border); }
+    .chart-cell-bl { border-right: 1px solid var(--neutral-border); }
+
+    .db-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .db-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--neutral-muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--neutral-border); }
+    .db-table td { padding: 7px 8px; border-bottom: 1px solid var(--neutral-border); color: var(--neutral-text); }
+    .db-table tbody tr:hover { background: var(--brand-blue-light); }
+    .db-table tbody tr:last-child td { border-bottom: none; }
+    .db-table td.text-right, .db-table th.text-right { text-align: right; }
+    .db-table td.empty-state { text-align: center; font-style: italic; color: var(--neutral-muted); padding: 18px 8px; }
+
+    .badge-days { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; color: #fff; }
+    .badge-days.badge-urgent { background: var(--bad); }
+    .badge-days.badge-soon { background: var(--brand-orange); }
+    .badge-days.badge-ok { background: var(--neutral-muted); }
+
+    .window-buttons { display: flex; gap: 6px; margin-bottom: 10px; }
+    .window-btn {
+        border: 1px solid var(--neutral-border); background: #fff; color: var(--neutral-muted);
+        border-radius: 14px; font-size: 12px; padding: 4px 12px; cursor: pointer;
+    }
+    .window-btn:hover { color: var(--brand-blue); border-color: var(--brand-blue); }
+    .window-btn.active { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; }
+
+    .table-scroll { max-height: 260px; overflow-y: auto; }
+    .chart-canvas-wide { height: 260px; }
+
+
+    /* ---- KPI cards -- uniform neutral cards, brand color only as a sparkline accent ---- */
+    .kpi-row { display: flex; flex-wrap: wrap; }
+    .kpi-row > [class*="col-"] { display: flex; }
+    .kpi-tile-link { display: flex; flex: 1 1 auto; color: inherit; text-decoration: none; }
+    .kpi-tile-link:hover, .kpi-tile-link:focus { color: inherit; text-decoration: none; }
+    .kpi-card {
+        width: 100%; border-radius: 10px; margin-bottom: 15px; cursor: pointer;
+        transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 20px 18px; height: 130px;
+        background: #f8f9fa; color: var(--neutral-text);
+        border: 1px solid var(--neutral-border);
+    }
+    .kpi-tile-link:hover .kpi-card { transform: scale(1.02); box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+
+    .kpi-main { text-align: left; }
+    .kpi-tile-link h3 { margin: 0 0 2px; font-size: 44px; font-weight: 700; }
+    .kpi-label { margin: 0 0 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--neutral-muted); }
+    .kpi-trend { font-size: 12px; white-space: nowrap; }
+
+    .kpi-trend-up { color: var(--good); }
+    .kpi-trend-down { color: var(--bad); }
+    .kpi-trend-flat { color: var(--neutral-muted); }
+
+    /* ---- Standalone KPI card, not wrapped in a link (e.g. a tab-scoped stat) ---- */
+    .kpi-standalone { cursor: default; }
+    .kpi-standalone h3 { margin: 0; font-size: 40px; font-weight: 700; }
+    .kpi-small { height: 90px; padding: 14px 16px; }
+    .kpi-small h3 { font-size: 28px; }
+    .kpi-unit { font-size: 18px; font-weight: 600; margin-left: 2px; }
+    .kpi-empty { font-size: 16px; font-weight: 400; font-style: italic; color: var(--neutral-muted); }
+
+    .badge-neutral { background: var(--neutral-muted); }
+    .table-card { height: 100%; }
+
+    .kpi-sparkline { flex: 0 0 90px; width: 90px; height: 54px; }
+    .kpi-sparkline polyline { fill: none; stroke-width: 2; }
+    .kpi-accent-blue .kpi-sparkline polyline { stroke: var(--brand-blue); }
+    .kpi-accent-orange .kpi-sparkline polyline { stroke: var(--brand-orange); }
+
+    /* ---- Tabs -- underline style, no boxed nav/tab-content ---- */
+    .dashboard-tabs { margin-top: 5px; }
+    .dashboard-tabs .nav-tabs { border-bottom: 2px solid var(--neutral-border); }
+    .dashboard-tabs .nav-tabs > li > a {
+        border: none; background: transparent; color: var(--neutral-muted); font-weight: 500;
+        border-radius: 0; text-align: center;
+    }
+    .dashboard-tabs .nav-tabs > li > a:hover { border: none; background: transparent; color: var(--brand-blue); }
+    .dashboard-tabs .nav-tabs > li.active > a,
+    .dashboard-tabs .nav-tabs > li.active > a:hover,
+    .dashboard-tabs .nav-tabs > li.active > a:focus {
+        border: none; border-bottom: 3px solid var(--brand-blue); background: transparent;
+        color: var(--brand-blue); font-weight: 600;
+    }
+    .dashboard-tabs .tab-content { padding: 20px 0; }
+</style>
+
+<div class="dashboard-header">
+    <img src="https://console.deploily.cloud/_next/image?url=%2Fimages%2Flogo_name.png&amp;w=256&amp;q=75" alt="{{ _('Deploily') }}">
+    <h2 class="dashboard-title">{{ _('Admin Dashboard') }}</h2>
+</div>
+
+{% macro kpi_trend(kpi) %}
+    {% if kpi.delta > 0 %}
+        {% set is_good = kpi.positive_is_good %}
+        <span class="kpi-trend kpi-trend-{{ 'up' if is_good else 'down' }}">&#9650; +{{ kpi.delta }} {{ _('vs last month') }}</span>
+    {% elif kpi.delta < 0 %}
+        {% set is_good = not kpi.positive_is_good %}
+        <span class="kpi-trend kpi-trend-{{ 'up' if is_good else 'down' }}">&#9660; {{ kpi.delta }} {{ _('vs last month') }}</span>
+    {% else %}
+        <span class="kpi-trend kpi-trend-flat">&#8212; {{ _('no change') }}</span>
+    {% endif %}
+{% endmacro %}
+
+{% macro kpi_aria(value, label, kpi) %}{{ value }} {{ label }}, {% if kpi.delta > 0 %}{{ _('up') }} {{ kpi.delta }}{% elif kpi.delta < 0 %}{{ _('down') }} {{ -kpi.delta }}{% else %}{{ _('no change') }}{% endif %} {{ _('vs last month') }}{% endmacro %}
+
+{% macro kpi_sparkline(kpi) %}<svg class="kpi-sparkline" viewBox="0 0 100 54" preserveAspectRatio="none" data-values="{{ kpi.sparkline|tojson }}"><polyline points=""></polyline></svg>{% endmacro %}
+
+{% macro customer_name(ticket) %}{% if ticket.created_by %}{% if ticket.created_by.first_name %}{{ ticket.created_by.first_name }} {{ ticket.created_by.last_name }}{% else %}{{ ticket.created_by.username }}{% endif %}{% else %}—{% endif %}{% endmacro %}
+
+<div class="row kpi-row">
     <div class="col-sm-3">
-        <a class="btn btn-primary btn-block" href="/admin/Subscription/list/">{{ _('View Subscriptions') }}</a>
+        <a class="kpi-tile-link kpi-accent-orange" href="/users/list/" aria-label="{{ kpi_aria(kpis.total_users.value, _('Total Users'), kpis.total_users) }}">
+            <div class="kpi-card">
+                <div class="kpi-main">
+                    <p class="kpi-label">{{ _('Total Users') }}</p>
+                    <h3>{{ kpis.total_users.value }}</h3>
+                    {{ kpi_trend(kpis.total_users) }}
+                </div>
+                {{ kpi_sparkline(kpis.total_users) }}
+            </div>
+        </a>
     </div>
     <div class="col-sm-3">
-        <a class="btn btn-primary btn-block" href="/admin/supportticket/list/">{{ _('View Support Tickets') }}</a>
+        <a class="kpi-tile-link kpi-accent-orange" href="/admin/supportticket/list/" aria-label="{{ kpi_aria(kpis.open_tickets.value, _('Open Support Tickets'), kpis.open_tickets) }}">
+            <div class="kpi-card">
+                <div class="kpi-main">
+                    <p class="kpi-label">{{ _('Open Support Tickets') }}</p>
+                    <h3>{{ kpis.open_tickets.value }}</h3>
+                    {{ kpi_trend(kpis.open_tickets) }}
+                </div>
+                {{ kpi_sparkline(kpis.open_tickets) }}
+            </div>
+        </a>
     </div>
     <div class="col-sm-3">
-        <a class="btn btn-primary btn-block" href="/admin/affiliation/list/">{{ _('Validate Affiliations') }}</a>
+        <a class="kpi-tile-link kpi-accent-blue" href="/admin/affiliation/list/" aria-label="{{ kpi_aria(kpis.pending_affiliations.value, _('Pending Affiliations'), kpis.pending_affiliations) }}">
+            <div class="kpi-card">
+                <div class="kpi-main">
+                    <p class="kpi-label">{{ _('Pending Affiliations') }}</p>
+                    <h3>{{ kpis.pending_affiliations.value }}</h3>
+                    {{ kpi_trend(kpis.pending_affiliations) }}
+                </div>
+                {{ kpi_sparkline(kpis.pending_affiliations) }}
+            </div>
+        </a>
     </div>
     <div class="col-sm-3">
-        <a class="btn btn-primary btn-block" href="/users/list/">{{ _('View Users') }}</a>
+        <a class="kpi-tile-link kpi-accent-blue" href="/admin/Subscription/list/" aria-label="{{ kpi_aria(kpis.active_subscriptions.value, _('Active Subscriptions'), kpis.active_subscriptions) }}">
+            <div class="kpi-card">
+                <div class="kpi-main">
+                    <p class="kpi-label">{{ _('Active Subscriptions') }}</p>
+                    <h3>{{ kpis.active_subscriptions.value }}</h3>
+                    {{ kpi_trend(kpis.active_subscriptions) }}
+                </div>
+                {{ kpi_sparkline(kpis.active_subscriptions) }}
+            </div>
+        </a>
     </div>
 </div>
 
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-sm-3">
-        <div class="panel panel-default text-center">
-            <div class="panel-body">
-                <h3 style="margin-top:0;">{{ kpis.active_subscriptions }}</h3>
-                <p>{{ _('Active Subscriptions') }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-3">
-        <div class="panel panel-default text-center">
-            <div class="panel-body">
-                <h3 style="margin-top:0;">{{ kpis.open_tickets }}</h3>
-                <p>{{ _('Open Support Tickets') }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-3">
-        <div class="panel panel-default text-center">
-            <div class="panel-body">
-                <h3 style="margin-top:0;">{{ kpis.pending_affiliations }}</h3>
-                <p>{{ _('Pending Affiliations') }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-3">
-        <div class="panel panel-default text-center">
-            <div class="panel-body">
-                <h3 style="margin-top:0;">{{ kpis.total_users }}</h3>
-                <p>{{ _('Total Users') }}</p>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="dashboard-tabs">
+    <ul class="nav nav-tabs nav-justified" role="tablist">
+        <li role="presentation" class="active"><a href="#tab-overview" role="tab" data-toggle="tab">{{ _('Overview') }}</a></li>
+        <li role="presentation"><a href="#tab-subscriptions" role="tab" data-toggle="tab">{{ _('Subscriptions') }}</a></li>
+        <li role="presentation"><a href="#tab-users" role="tab" data-toggle="tab">{{ _('Users & Affiliations') }}</a></li>
+        <li role="presentation"><a href="#tab-support" role="tab" data-toggle="tab">{{ _('Support') }}</a></li>
+        <li role="presentation"><a href="#tab-alerts" role="tab" data-toggle="tab">{{ _('Alerts') }}</a></li>
+    </ul>
 
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">{{ _('Subscriptions by Status') }}</div>
-            <div class="panel-body"><div id="chart_sub_status" style="height: 260px;"></div></div>
-        </div>
-    </div>
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">{{ _('Subscriptions by Category') }}</div>
-            <div class="panel-body"><div id="chart_sub_category" style="height: 260px;"></div></div>
-        </div>
-    </div>
-</div>
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">{{ _('Support Tickets by Status') }}</div>
-            <div class="panel-body"><div id="chart_ticket_status" style="height: 260px;"></div></div>
-        </div>
-    </div>
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">{{ _('Signups per Month') }}</div>
-            <div class="panel-body"><div id="chart_signups" style="height: 260px;"></div></div>
-        </div>
-    </div>
-</div>
+    <div class="tab-content">
 
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                {{ _('Subscriptions Expiring in 7 Days') }}
-                <a class="pull-right" href="/admin/Subscription/list/">{{ _('view all') }}</a>
+        <div role="tabpanel" class="tab-pane active" id="tab-overview">
+            <div class="chart-grid">
+                <div class="db-card chart-card chart-cell-tl">
+                    <div class="db-card-title chart-card-title"><a href="/admin/Subscription/list/">{{ _('Subscriptions by Category & Status') }}</a></div>
+                    <div id="chart_sub_category_status" class="chart-canvas"></div>
+                </div>
+                <div class="db-card chart-card chart-cell-tr">
+                    <div class="db-card-title chart-card-title"><a href="/admin/supportticket/list/">{{ _('Open Ticket Age') }}</a></div>
+                    <div id="chart_ticket_age" class="chart-canvas"></div>
+                </div>
+                <div class="db-card chart-card chart-cell-bl">
+                    <div class="db-card-title chart-card-title"><a href="/users/list/">{{ _('Signups per Month') }}</a></div>
+                    <div id="chart_signups" class="chart-canvas"></div>
+                </div>
+                <div class="db-card chart-card chart-cell-br">
+                    <div class="db-card-title chart-card-title"><a href="/admin/payment/list/">{{ _('Payment Status') }}</a></div>
+                    <div id="chart_payment_status" class="chart-canvas"></div>
+                </div>
             </div>
-            <table class="table table-striped table-condensed">
-                <thead><tr><th>{{ _('Name') }}</th><th>{{ _('Start') }}</th><th>{{ _('Duration (mo)') }}</th></tr></thead>
-                <tbody>
-                {% for s in tables.expiring_subscriptions %}
-                    <tr><td>{{ s.name }}</td><td>{{ s.start_date.strftime('%Y-%m-%d') }}</td><td>{{ s.duration_month }}</td></tr>
-                {% else %}
-                    <tr><td colspan="3">{{ _('Nothing expiring soon') }}</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
         </div>
-    </div>
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                {{ _('Latest Open Support Tickets') }}
-                <a class="pull-right" href="/admin/supportticket/list/">{{ _('view all') }}</a>
-            </div>
-            <table class="table table-striped table-condensed">
-                <thead><tr><th>{{ _('Title') }}</th><th>{{ _('Created') }}</th></tr></thead>
-                <tbody>
-                {% for t in tables.open_tickets %}
-                    <tr><td>{{ t.title_shortened }}</td><td>{{ t.created_on.strftime('%Y-%m-%d') }}</td></tr>
-                {% else %}
-                    <tr><td colspan="2">{{ _('No open tickets') }}</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                {{ _('Latest Signups') }}
-                <a class="pull-right" href="/users/list/">{{ _('view all') }}</a>
+        <div role="tabpanel" class="tab-pane" id="tab-subscriptions">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="db-card">
+                        <div class="db-card-title">
+                            {{ _('Expiring Subscriptions') }}
+                            <a href="/admin/Subscription/list/">{{ _('view all') }}</a>
+                        </div>
+                        <div class="window-buttons">
+                            <button type="button" class="window-btn active" data-window="7">{{ _('7 days') }}</button>
+                            <button type="button" class="window-btn" data-window="15">{{ _('15 days') }}</button>
+                            <button type="button" class="window-btn" data-window="30">{{ _('1 month') }}</button>
+                        </div>
+                        <div class="table-scroll">
+                        {% for window, rows in [(7, tables.expiring_7), (15, tables.expiring_15), (30, tables.expiring_30)] %}
+                            <table class="db-table expiring-panel" data-window="{{ window }}" {{ 'hidden' if window != 7 }}>
+                                <thead><tr><th>{{ _('Name') }}</th><th>{{ _('Start') }}</th><th class="text-right">{{ _('Duration (mo)') }}</th><th class="text-right">{{ _('Expires') }}</th></tr></thead>
+                                <tbody>
+                                {% for s, days_left in rows %}
+                                    <tr>
+                                        <td>{{ s.name }}</td>
+                                        <td>{{ s.start_date.strftime('%Y-%m-%d') }}</td>
+                                        <td class="text-right">{{ s.duration_month }}</td>
+                                        <td class="text-right">
+                                            <span class="badge-days {{ 'badge-urgent' if days_left <= 2 else ('badge-soon' if days_left <= 5 else 'badge-ok') }}">
+                                                {{ days_left }}d
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="4" class="empty-state">{{ _('Nothing expiring soon') }}</td></tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="db-card">
+                        <div class="db-card-title">
+                            {{ _('Recently Churned') }}
+                            <a href="/admin/Subscription/list/">{{ _('view all') }}</a>
+                        </div>
+                        <div class="window-buttons" style="visibility: hidden;" aria-hidden="true">
+                            <button type="button" class="window-btn">{{ _('spacer') }}</button>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table">
+                            <thead><tr><th>{{ _('Name') }}</th><th class="text-right">{{ _('Since') }}</th></tr></thead>
+                            <tbody>
+                            {% for s in tables.recently_churned %}
+                                <tr><td>{{ s.name }}</td><td class="text-right">{{ s.changed_on.strftime('%Y-%m-%d') if s.changed_on else '-' }}</td></tr>
+                            {% else %}
+                                <tr><td colspan="2" class="empty-state">{{ _('No recent churn') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <table class="table table-striped table-condensed">
-                <thead><tr><th>{{ _('Username') }}</th><th>{{ _('Email') }}</th><th>{{ _('Joined') }}</th></tr></thead>
-                <tbody>
-                {% for u in tables.latest_signups %}
-                    <tr><td>{{ u.username }}</td><td>{{ u.email }}</td><td>{{ u.created_on.strftime('%Y-%m-%d') if u.created_on else '-' }}</td></tr>
-                {% else %}
-                    <tr><td colspan="3">{{ _('No users yet') }}</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="col-sm-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                {{ _('Pending Affiliations') }}
-                <a class="pull-right" href="/admin/affiliation/list/">{{ _('view all') }}</a>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="db-card chart-card">
+                        <div class="db-card-title chart-card-title">{{ _('Churn per Month') }}</div>
+                        <div id="chart_churn" class="chart-canvas chart-canvas-wide"></div>
+                    </div>
+                </div>
             </div>
-            <table class="table table-striped table-condensed">
-                <thead><tr><th>{{ _('Provider') }}</th><th>{{ _('Total Price') }}</th></tr></thead>
-                <tbody>
-                {% for a in tables.pending_affiliations %}
-                    <tr><td>{{ a.provider.name if a.provider else '-' }}</td><td>{{ a.total_price }}</td></tr>
-                {% else %}
-                    <tr><td colspan="2">{{ _('No pending affiliations') }}</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
         </div>
+
+        <div role="tabpanel" class="tab-pane" id="tab-users">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="db-card table-card">
+                        <div class="db-card-title">
+                            {{ _('Unverified Accounts') }}
+                            <a href="/users/list/">{{ _('view all') }}</a>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table">
+                            <thead><tr><th>{{ _('Username') }}</th><th>{{ _('Email') }}</th><th class="text-right">{{ _('Joined') }}</th></tr></thead>
+                            <tbody>
+                            {% for u in tables.unverified_accounts %}
+                                <tr><td>{{ u.username }}</td><td>{{ u.email }}</td><td class="text-right">{{ u.created_on.strftime('%Y-%m-%d') if u.created_on else '-' }}</td></tr>
+                            {% else %}
+                                <tr><td colspan="3" class="empty-state">{{ _('No unverified accounts') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="db-card table-card">
+                        <div class="db-card-title">
+                            {{ _('Pending Affiliations') }}
+                            <a href="/admin/affiliation/list/">{{ _('view all') }}</a>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table">
+                            <thead><tr><th>{{ _('Provider') }}</th><th>{{ _('Requester') }}</th><th class="text-right">{{ _('Pending') }}</th></tr></thead>
+                            <tbody>
+                            {% for a, days in tables.pending_affiliations %}
+                                <tr>
+                                    <td>{{ a.provider.name if a.provider else '-' }}</td>
+                                    <td>{{ customer_name(a) }}</td>
+                                    <td class="text-right">
+                                        <span class="badge-days {{ 'badge-urgent' if days >= 14 else ('badge-soon' if days >= 5 else 'badge-ok') }}">
+                                            {{ days }}d
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="3" class="empty-state">{{ _('No pending affiliations') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="db-card table-card">
+                        <div class="db-card-title">
+                            {{ _('New Contact Leads') }}
+                            <a href="/admin/contact-us/list/">{{ _('view all') }}</a>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table">
+                            <thead><tr><th>{{ _('Name') }}</th><th>{{ _('Email') }}</th><th>{{ _('Phone') }}</th><th>{{ _('Message') }}</th><th>{{ _('Interested In') }}</th><th class="text-right">{{ _('Received') }}</th></tr></thead>
+                            <tbody>
+                            {% for l in tables.new_leads %}
+                                <tr>
+                                    <td>{{ l.name }}</td>
+                                    <td>{{ l.email }}</td>
+                                    <td>{{ l.phone or '-' }}</td>
+                                    <td>{{ l.message }}</td>
+                                    <td>{{ l.service.name if l.service else '-' }}</td>
+                                    <td class="text-right">{{ l.created_on.strftime('%Y-%m-%d') if l.created_on else '-' }}</td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="6" class="empty-state">{{ _('No new leads') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="tab-support">
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="kpi-card kpi-standalone kpi-small">
+                        <div class="kpi-main">
+                            <p class="kpi-label">{{ _('Avg First Response Time') }}</p>
+                            {% if avg_first_response_hours is not none %}
+                                <h3>{{ avg_first_response_hours }}<span class="kpi-unit">{{ _('h') }}</span></h3>
+                            {% else %}
+                                <h3 class="kpi-empty">{{ _('No data yet') }}</h3>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-8">
+                    <div class="db-card table-card">
+                        <div class="db-card-title">
+                            {{ _('Latest Open Support Tickets') }}
+                            <a href="/admin/supportticket/list/">{{ _('view all') }}</a>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table">
+                            <thead><tr><th>{{ _('Title') }}</th><th>{{ _('Customer') }}</th><th class="text-right">{{ _('Open For') }}</th></tr></thead>
+                            <tbody>
+                            {% for t, days in tables.open_tickets %}
+                                <tr>
+                                    <td>{{ t.title_shortened }}</td>
+                                    <td>{{ customer_name(t) }}</td>
+                                    <td class="text-right"><span class="badge-days badge-neutral">{{ days }}d</span></td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="3" class="empty-state">{{ _('No open tickets') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="db-card table-card">
+                        <div class="db-card-title">
+                            {{ _('Never Responded') }}
+                            <a href="/admin/supportticket/list/">{{ _('view all') }}</a>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table">
+                            <thead><tr><th>{{ _('Title') }}</th><th>{{ _('Customer') }}</th><th>{{ _('Subscription') }}</th><th class="text-right">{{ _('Waiting') }}</th></tr></thead>
+                            <tbody>
+                            {% for t, days in tables.never_responded %}
+                                <tr>
+                                    <td>{{ t.title_shortened }}</td>
+                                    <td>{{ customer_name(t) }}</td>
+                                    <td>{{ t.subscription.name if t.subscription else '-' }}</td>
+                                    <td class="text-right">
+                                        <span class="badge-days {{ 'badge-urgent' if days >= 3 else ('badge-soon' if days >= 1 else 'badge-ok') }}">
+                                            {{ days }}d
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" class="empty-state">{{ _('Everything has been responded to') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="tab-alerts">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="db-card">
+                        <div class="db-card-title">{{ _('Emails') }}</div>
+                        <div class="window-buttons">
+                            <button type="button" class="window-btn active" data-filter="failed">{{ _('Failed') }}</button>
+                            <button type="button" class="window-btn" data-filter="stuck">{{ _('Stuck') }}</button>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table filter-panel" data-filter="failed">
+                            <thead><tr><th>{{ _('To') }}</th><th>{{ _('Subject') }}</th><th class="text-right">{{ _('Since') }}</th></tr></thead>
+                            <tbody>
+                            {% for m in tables.failed_emails %}
+                                <tr><td>{{ m.email_to }}</td><td>{{ m.title }}</td><td class="text-right">{{ m.created_on.strftime('%Y-%m-%d %H:%M') if m.created_on else '-' }}</td></tr>
+                            {% else %}
+                                <tr><td colspan="3" class="empty-state">{{ _('No failed emails') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <table class="db-table filter-panel" data-filter="stuck" hidden>
+                            <thead><tr><th>{{ _('To') }}</th><th>{{ _('Subject') }}</th><th class="text-right">{{ _('Since') }}</th></tr></thead>
+                            <tbody>
+                            {% for m in tables.stuck_emails %}
+                                <tr><td>{{ m.email_to }}</td><td>{{ m.title }}</td><td class="text-right">{{ m.created_on.strftime('%Y-%m-%d %H:%M') if m.created_on else '-' }}</td></tr>
+                            {% else %}
+                                <tr><td colspan="3" class="empty-state">{{ _('Nothing stuck') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="db-card">
+                        <div class="db-card-title">{{ _('Deployments') }}</div>
+                        <div class="window-buttons">
+                            <button type="button" class="window-btn active" data-filter="failed">{{ _('Failed') }}</button>
+                            <button type="button" class="window-btn" data-filter="stuck">{{ _('Stuck') }}</button>
+                        </div>
+                        <div class="table-scroll">
+                        <table class="db-table filter-panel" data-filter="failed">
+                            <thead><tr><th>{{ _('Type') }}</th><th>{{ _('Name') }}</th><th>{{ _('Owner') }}</th></tr></thead>
+                            <tbody>
+                            {% for kind, s in tables.errored_deployments %}
+                                <tr><td>{{ kind }}</td><td>{{ s.name }}</td><td>{{ customer_name(s) }}</td></tr>
+                            {% else %}
+                                <tr><td colspan="3" class="empty-state">{{ _('No errored deployments') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <table class="db-table filter-panel" data-filter="stuck" hidden>
+                            <thead><tr><th>{{ _('Type') }}</th><th>{{ _('Name') }}</th><th>{{ _('Owner') }}</th><th class="text-right">{{ _('Stuck For') }}</th></tr></thead>
+                            <tbody>
+                            {% for kind, s, days in tables.stuck_deployments %}
+                                <tr>
+                                    <td>{{ kind }}</td>
+                                    <td>{{ s.name }}</td>
+                                    <td>{{ customer_name(s) }}</td>
+                                    <td class="text-right">
+                                        <span class="badge-days {{ 'badge-urgent' if days >= 3 else ('badge-soon' if days >= 1 else 'badge-ok') }}">
+                                            {{ days }}d
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" class="empty-state">{{ _('Nothing stuck') }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <script nonce="{{ baselib.get_nonce() }}" src="{{ url_for('appbuilder.static', filename='js/google_charts.js') }}"></script>
 <script nonce="{{ baselib.get_nonce() }}">
+    // Brand palette (blue/orange) -- same colors as the KPI cards above,
+    // plus a neutral charcoal for a 3rd data series where one is unavoidable
+    // (e.g. "failed" payments) rather than introducing an unrelated hue.
+    var PALETTE = {
+        blue: '#0d6efd', blueDark: '#0a58ca',
+        orange: '#f26522', orangeDark: '#c94f13',
+        charcoal: '#495057'
+    };
+
     var DASHBOARD_DATA = {
-        sub_status: {{ charts.subscriptions_by_status.items()|list|tojson }},
-        sub_category: {{ charts.subscriptions_by_category.items()|list|tojson }},
-        ticket_status: {{ charts.tickets_by_status.items()|list|tojson }},
-        signups: {{ charts.signups_per_month.items()|list|tojson }}
+        sub_category_status: {{ charts.subscriptions_by_category_status|tojson }},
+        sub_category_order: {{ charts.subscriptions_by_category_status.keys()|list|tojson }},
+        ticket_age: {{ charts.ticket_age_histogram.items()|list|tojson }},
+        signups: {{ charts.signups_per_month.items()|list|tojson }},
+        payment_status: {{ charts.payment_status|tojson }},
+        churn: {{ charts.churn_per_month.items()|list|tojson }}
     };
 
     google.load('visualization', '1', {'packages': ['corechart']});
     google.setOnLoadCallback(drawDashboardCharts);
 
-    function drawPie(elId, rows, title) {
+    function drawSubCategoryStatus(elId, data, order) {
         var dataTable = new google.visualization.DataTable();
-        dataTable.addColumn('string', 'Label');
-        dataTable.addColumn('number', 'Count');
-        dataTable.addRows(rows);
-        var chart = new google.visualization.PieChart(document.getElementById(elId));
-        chart.draw(dataTable, {title: title, pieSliceText: 'value'});
+        dataTable.addColumn('string', 'Category');
+        dataTable.addColumn('number', 'Active');
+        dataTable.addColumn('number', 'Inactive');
+        order.forEach(function (category) {
+            dataTable.addRow([category, data[category].active || 0, data[category].inactive || 0]);
+        });
+        var chart = new google.visualization.ColumnChart(document.getElementById(elId));
+        chart.draw(dataTable, {
+            isStacked: true,
+            colors: [PALETTE.blue, PALETTE.orange],
+            legend: {position: 'bottom'},
+            vAxis: {title: '{{ _("Subscriptions") }}'},
+            hAxis: {slantedText: true, slantedTextAngle: 20, textStyle: {fontSize: 11}},
+            chartArea: {width: '85%', height: '58%'}
+        });
     }
 
-    function drawColumn(elId, rows, title) {
+    function drawTicketAge(elId, rows) {
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn('string', 'Age');
+        dataTable.addColumn('number', 'Tickets');
+        dataTable.addRows(rows);
+        var chart = new google.visualization.ColumnChart(document.getElementById(elId));
+        chart.draw(dataTable, {
+            colors: [PALETTE.orange],
+            legend: {position: 'none'},
+            vAxis: {title: '{{ _("Open Tickets") }}'},
+            chartArea: {width: '85%', height: '65%'}
+        });
+    }
+
+    function drawSignups(elId, rows) {
         var dataTable = new google.visualization.DataTable();
         dataTable.addColumn('string', 'Month');
         dataTable.addColumn('number', 'Signups');
-        dataTable.addColumn({type: 'string', role: 'annotation'});
-        dataTable.addRows(rows.map(function (r) { return [r[0], r[1], String(r[1])]; }));
+        dataTable.addRows(rows);
         var chart = new google.visualization.ColumnChart(document.getElementById(elId));
         chart.draw(dataTable, {
-            title: title,
+            colors: [PALETTE.blue],
             legend: {position: 'none'},
-            annotations: {alwaysOutside: false, textStyle: {fontSize: 12, bold: true}}
+            vAxis: {title: '{{ _("Signups") }}'},
+            chartArea: {width: '85%', height: '65%'}
+        });
+    }
+
+    function drawPaymentStatus(elId, data) {
+        var order = ['completed', 'pending', 'failed'];
+        var colors = [PALETTE.blue, PALETTE.orange, PALETTE.charcoal];
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn('string', 'Status');
+        dataTable.addColumn('number', 'Count');
+        order.forEach(function (status) {
+            if (data[status]) {
+                var label = status.charAt(0).toUpperCase() + status.slice(1);
+                dataTable.addRow([label, data[status]]);
+            }
+        });
+        var usedColors = order.filter(function (s) { return data[s]; }).map(function (s) {
+            return colors[order.indexOf(s)];
+        });
+        var chart = new google.visualization.PieChart(document.getElementById(elId));
+        chart.draw(dataTable, {
+            pieHole: 0.45,
+            pieSliceText: 'none',
+            colors: usedColors,
+            legend: {position: 'bottom'},
+            chartArea: {width: '90%', height: '75%'}
+        });
+    }
+
+    function drawChurn(elId, rows) {
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn('string', 'Month');
+        dataTable.addColumn('number', 'Churned');
+        dataTable.addRows(rows);
+        var chart = new google.visualization.ColumnChart(document.getElementById(elId));
+        chart.draw(dataTable, {
+            colors: [PALETTE.orangeDark],
+            legend: {position: 'none'},
+            vAxis: {title: '{{ _("Churned Subscriptions") }}'},
+            chartArea: {width: '92%', height: '65%'}
         });
     }
 
     function drawDashboardCharts() {
-        drawPie('chart_sub_status', DASHBOARD_DATA.sub_status, '{{ _("Subscriptions by Status") }}');
-        drawPie('chart_sub_category', DASHBOARD_DATA.sub_category, '{{ _("Subscriptions by Category") }}');
-        drawPie('chart_ticket_status', DASHBOARD_DATA.ticket_status, '{{ _("Support Tickets by Status") }}');
-        drawColumn('chart_signups', DASHBOARD_DATA.signups, '{{ _("Signups per Month") }}');
+        drawSubCategoryStatus('chart_sub_category_status', DASHBOARD_DATA.sub_category_status, DASHBOARD_DATA.sub_category_order);
+        drawTicketAge('chart_ticket_age', DASHBOARD_DATA.ticket_age);
+        drawSignups('chart_signups', DASHBOARD_DATA.signups);
+        drawPaymentStatus('chart_payment_status', DASHBOARD_DATA.payment_status);
     }
+
+    function drawChurnChart() {
+        drawChurn('chart_churn', DASHBOARD_DATA.churn);
+    }
+
+    // Redraw whenever a tab holding Google Charts (re)becomes visible --
+    // charts size off the container's rendered width, which is 0 while its
+    // tab pane is display:none, so a chart drawn while hidden renders blank.
+    $('a[data-toggle="tab"][href="#tab-overview"]').on('shown.bs.tab', drawDashboardCharts);
+    $('a[data-toggle="tab"][href="#tab-subscriptions"]').on('shown.bs.tab', drawChurnChart);
+
+    // Generic window/filter switcher -- scoped per button-group and per card
+    // so multiple independent toggle groups (7/15/30 days, failed/stuck, ...)
+    // can coexist on the same page without stepping on each other.
+    document.querySelectorAll('.window-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var group = btn.closest('.window-buttons');
+            var card = btn.closest('.db-card');
+            if (!group || !card) return;
+
+            group.querySelectorAll('.window-btn').forEach(function (b) {
+                b.classList.toggle('active', b === btn);
+            });
+
+            var windowVal = btn.getAttribute('data-window');
+            var filterVal = btn.getAttribute('data-filter');
+
+            if (windowVal !== null) {
+                card.querySelectorAll('.expiring-panel').forEach(function (panel) {
+                    panel.hidden = panel.getAttribute('data-window') !== windowVal;
+                });
+            }
+            if (filterVal !== null) {
+                card.querySelectorAll('.filter-panel').forEach(function (panel) {
+                    panel.hidden = panel.getAttribute('data-filter') !== filterVal;
+                });
+            }
+        });
+    });
+
+    function drawKpiSparklines() {
+        document.querySelectorAll('.kpi-sparkline').forEach(function (svg) {
+            var values;
+            try {
+                values = JSON.parse(svg.getAttribute('data-values') || '[]');
+            } catch (e) {
+                values = [];
+            }
+            if (!values.length) return;
+
+            var max = Math.max.apply(null, values.concat([1]));
+            var min = Math.min.apply(null, values.concat([0]));
+            var range = (max - min) || 1;
+            var w = 100, h = 54, pad = 4;
+            var step = values.length > 1 ? (w - pad * 2) / (values.length - 1) : 0;
+
+            var points = values.map(function (v, i) {
+                var x = pad + step * i;
+                var y = h - pad - ((v - min) / range) * (h - pad * 2);
+                return x + ',' + y.toFixed(1);
+            }).join(' ');
+
+            svg.querySelector('polyline').setAttribute('points', points);
+        });
+    }
+    drawKpiSparklines();
 </script>
 {% endblock %}
