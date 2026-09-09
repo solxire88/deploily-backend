@@ -136,7 +136,7 @@ class DeploymentServiceSubscriptionModelApi(SubscriptionModelApi):
 
     def post_update(self, item):
         user = current_user
-        notify_email = current_app.config.get("NOTIFICATION_EMAIL")
+        support_email = current_app.config.get("SUPPORT_EMAIL")
 
         # Check if a restart is required but hasn't been flagged yet
         if not item.required_restart and item.deployment_status in [
@@ -159,8 +159,8 @@ class DeploymentServiceSubscriptionModelApi(SubscriptionModelApi):
             email = Mail(
                 title=subject,
                 body=email_body,
-                email_to=notify_email,
-                email_from=notify_email,
+                email_to=support_email,
+                email_from=support_email,
                 mail_state="outGoing",
             )
             db.session.add(email)
@@ -169,7 +169,7 @@ class DeploymentServiceSubscriptionModelApi(SubscriptionModelApi):
             # Send the email asynchronously
             send_mail.delay(email.id)
 
-            print("### Email sent to:", notify_email)
+            print("### Email sent to:", support_email)
 
             user_subject, user_email_body = render_email(
                 "user_restart_application",
@@ -183,7 +183,8 @@ class DeploymentServiceSubscriptionModelApi(SubscriptionModelApi):
                 title=user_subject,
                 body=user_email_body,
                 email_to=user.email,
-                email_from=notify_email,
+                email_from=support_email,
+                reply_to=support_email,
                 mail_state="outGoing",
             )
             db.session.add(email)
@@ -192,7 +193,7 @@ class DeploymentServiceSubscriptionModelApi(SubscriptionModelApi):
             # Send the email asynchronously
             send_mail.delay(email.id)
 
-            print("### Email sent to:", notify_email)
+            print("### Email sent to:", support_email)
 
             item.required_restart = False
             db.session.commit()

@@ -23,15 +23,22 @@ def send_mail(mail_id):
                 _logger.warning(f"[SEND MAIL TASK] THE EMAIL DON'T EXIST")
                 return
             _logger.info("[CRON] Sending pending emails - START")
+
+            creds = current_app.config["MAIL_ACCOUNTS"].get(mail.email_from)
+            if not creds:
+                raise ValueError(f"No SMTP account configured for sender {mail.email_from!r}")
+
             msg = MIMEText(mail.body or "", "html")
             msg["Subject"] = mail.title or "(No subject)"
-            msg["From"] = current_app.config["MAIL_USERNAME"]
+            msg["From"] = mail.email_from
             msg["To"] = mail.email_to
+            if mail.reply_to:
+                msg["Reply-To"] = mail.reply_to
 
             smtp_host = current_app.config["MAIL_HOST"]
             smtp_port = int(current_app.config["MAIL_PORT"])
-            smtp_user = current_app.config["MAIL_USERNAME"]
-            smtp_pass = current_app.config["MAIL_PASSWORD"]
+            smtp_user = creds["user"]
+            smtp_pass = creds["pass"]
 
             _logger.debug(f"[CRON] Connecting to {smtp_host}:{smtp_port} with user {smtp_user}")
 

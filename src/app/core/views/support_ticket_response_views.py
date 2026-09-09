@@ -64,6 +64,7 @@ class SupportTicketResponseModelView(ModelView):
                     body=user_body,
                     email_to=user.email,
                     email_from=current_app.config["SUPPORT_EMAIL"],
+                    reply_to=current_app.config["SUPPORT_EMAIL"],
                     mail_state="outGoing",
                 )
 

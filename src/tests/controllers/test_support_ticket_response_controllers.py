@@ -7,7 +7,7 @@ import pytest
 from flask_jwt_extended import create_access_token
 from pydantic import BaseModel, ValidationError
 
-supprot_ticket_response_data = {
+support_ticket_response_data = {
     "message": "Test SupportTiketResponse",
     "support_ticket_id": 1,
 }
@@ -36,7 +36,7 @@ class SupportTiketListResponse(BaseModel):
     result: list[SupportTiketResponse]
 
 
-def test_create_supprotticketresponse(client, test_user, app, appbuilder):
+def test_create_supportticketresponse(client, test_user, app, appbuilder):
     access_token = create_access_token(test_user.id, expires_delta=False, fresh=True)
 
     with app.app_context():
@@ -48,7 +48,7 @@ def test_create_supprotticketresponse(client, test_user, app, appbuilder):
 
         response = client.post(
             "/api/v1/support-ticket-response/",
-            data=json.dumps(supprot_ticket_response_data),
+            data=json.dumps(support_ticket_response_data),
             content_type="application/json",
             headers={"Authorization": f"Bearer {access_token}"},
         )

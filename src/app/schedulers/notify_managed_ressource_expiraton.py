@@ -61,7 +61,13 @@ def notify_managed_ressource_expiration():
                         days=days_remaining,
                         expiration_date=res.end_date.strftime("%Y-%m-%d"),
                     )
-                    send_and_log_email(user.email, subject, body)
+                    send_and_log_email(
+                        user.email,
+                        subject,
+                        body,
+                        from_email=app.config["NOTIFICATION_EMAIL"],
+                        reply_to=app.config["NOTIFICATION_EMAIL"],
+                    )
 
                     admin_subject, admin_body = render_email(
                         "admin_resource_expiring_soon",
@@ -70,7 +76,12 @@ def notify_managed_ressource_expiration():
                         days=days_remaining,
                         expiration_date=res.end_date.strftime("%Y-%m-%d"),
                     )
-                    send_and_log_email(app.config["NOTIFICATION_EMAIL"], admin_subject, admin_body)
+                    send_and_log_email(
+                        app.config["NOTIFICATION_EMAIL"],
+                        admin_subject,
+                        admin_body,
+                        from_email=app.config["NOTIFICATION_EMAIL"],
+                    )
 
                     sent_ressource_notifications.add(key)
 

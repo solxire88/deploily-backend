@@ -13,6 +13,7 @@ class Mail(Model):
     mail_state = Column(Enum("outGoing", "sent", "error", "canceled", name="mail_state"))
     email_from = Column(String(255), default="")
     email_to = Column(String(255), default="")
+    reply_to = Column(String(255), nullable=True)
     created_on = Column(DateTime, default=lambda: datetime.now(), nullable=True)
 
     def __repr__(self):

@@ -47,11 +47,12 @@ def render_email(key, **context):
     return subject, mjml2html(mjml_source)
 
 
-def send_and_log_email(to, subject, body, from_email=None):
+def send_and_log_email(to, subject, body, from_email=None, reply_to=None):
     mail = Mail(
         title=subject,
         email_from=from_email or current_app.config["MAIL_USERNAME"],
         email_to=to,
+        reply_to=reply_to,
         body=body,
         mail_state="outGoing",
     )
@@ -59,15 +60,21 @@ def send_and_log_email(to, subject, body, from_email=None):
     db.session.flush()
 
     try:
+        creds = current_app.config["MAIL_ACCOUNTS"].get(mail.email_from)
+        if not creds:
+            raise ValueError(f"No SMTP account configured for sender {mail.email_from!r}")
+
         msg = MIMEText(body, "html")
         msg["Subject"] = subject
         msg["From"] = mail.email_from
         msg["To"] = mail.email_to
+        if mail.reply_to:
+            msg["Reply-To"] = mail.reply_to
 
         smtp_host = current_app.config["MAIL_HOST"]
         smtp_port = int(current_app.config["MAIL_PORT"])
-        smtp_user = current_app.config["MAIL_USERNAME"]
-        smtp_pass = current_app.config["MAIL_PASSWORD"]
+        smtp_user = creds["user"]
+        smtp_pass = creds["pass"]
 
         server = smtplib.SMTP_SSL(host=smtp_host, port=smtp_port)
         server.set_debuglevel(1)

@@ -88,6 +88,7 @@ class SupportTicketModelApi(ModelRestApi):
                     body=user_template,
                     email_to=user.email,  # ✅ USER EMAIL
                     email_from=current_app.config["SUPPORT_EMAIL"],
+                    reply_to=current_app.config["SUPPORT_EMAIL"],
                     mail_state="outGoing",
                 )
 

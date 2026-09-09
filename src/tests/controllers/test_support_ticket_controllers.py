@@ -7,7 +7,7 @@ import pytest
 from flask_jwt_extended import create_access_token
 from pydantic import BaseModel, ValidationError
 
-supprot_ticket_data = {
+support_ticket_data = {
     "title": "Test SupportTiket",
     "description": "This is a test of support ticket",
     "status": "open",
@@ -35,11 +35,11 @@ class SupportTiketListResponse(BaseModel):
     result: list[SupportTiket]
 
 
-def test_create_supprotticket(client, test_user, app, appbuilder):
+def test_create_supportticket(client, test_user, app, appbuilder):
     access_token = create_access_token(test_user.id, expires_delta=False, fresh=True)
 
     with app.app_context():
-        from app.core.controllers.supprot_ticket_controllers import (
+        from app.core.controllers.support_ticket_controllers import (
             SupportTicketModelApi,
         )
 
@@ -47,7 +47,7 @@ def test_create_supprotticket(client, test_user, app, appbuilder):
 
         response = client.post(
             "/api/v1/support-ticket/",
-            data=json.dumps(supprot_ticket_data),
+            data=json.dumps(support_ticket_data),
             content_type="application/json",
             headers={"Authorization": f"Bearer {access_token}"},
         )
@@ -62,7 +62,7 @@ def test_update_supportticket(client, test_user, app, appbuilder):
     access_token = create_access_token(test_user.id, expires_delta=False, fresh=True)
 
     with app.app_context():
-        from app.core.controllers.supprot_ticket_controllers import (
+        from app.core.controllers.support_ticket_controllers import (
             SupportTicketModelApi,
         )
 
@@ -88,7 +88,7 @@ def test_get_supportticket(client, test_user, app, appbuilder):
     access_token = create_access_token(test_user.id, expires_delta=False, fresh=True)
 
     with app.app_context():
-        from app.core.controllers.supprot_ticket_controllers import (
+        from app.core.controllers.support_ticket_controllers import (
             SupportTicketModelApi,
         )
 
@@ -109,7 +109,7 @@ def test_delete_supportticket(client, test_user, app, appbuilder):
     access_token = create_access_token(test_user.id, expires_delta=False, fresh=True)
 
     with app.app_context():
-        from app.core.controllers.supprot_ticket_controllers import (
+        from app.core.controllers.support_ticket_controllers import (
             SupportTicketModelApi,
         )
 
@@ -127,7 +127,7 @@ def test_authenticated_access(client, test_user, app, appbuilder):
     access_token = create_access_token(test_user.id, expires_delta=False, fresh=True)
 
     with app.app_context():
-        from app.core.controllers.supprot_ticket_controllers import (
+        from app.core.controllers.support_ticket_controllers import (
             SupportTicketModelApi,
         )
 
@@ -143,7 +143,7 @@ def test_authenticated_access(client, test_user, app, appbuilder):
 
 def test_unauthenticated_access(client, app, appbuilder):
     with app.app_context():
-        from app.core.controllers.supprot_ticket_controllers import (
+        from app.core.controllers.support_ticket_controllers import (
             SupportTicketModelApi,
         )
 
@@ -161,7 +161,7 @@ def test_token_expired(client, app, test_user, appbuilder):
     expired_access_token = create_access_token(test_user.id, expires_delta=timedelta(seconds=-1))
 
     with app.app_context():
-        from app.core.controllers.supprot_ticket_controllers import (
+        from app.core.controllers.support_ticket_controllers import (
             SupportTicketModelApi,
         )
 

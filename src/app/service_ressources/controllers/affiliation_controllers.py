@@ -159,6 +159,8 @@ class AffiliationModelApi(ModelRestApi):
             to=user.email,
             subject=user_subject,
             body=user_email_body,
+            from_email=current_app.config["NOTIFICATION_EMAIL"],
+            reply_to=current_app.config["NOTIFICATION_EMAIL"],
         )
 
         # Email to internal team
@@ -172,6 +174,7 @@ class AffiliationModelApi(ModelRestApi):
             to=current_app.config["NOTIFICATION_EMAIL"],
             subject=deploily_subject,
             body=deploily_email_body,
+            from_email=current_app.config["NOTIFICATION_EMAIL"],
         )
 
         return self.response(201, message="Affiliation créée et emails envoyés.")

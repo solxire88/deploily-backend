@@ -69,7 +69,13 @@ def notify_expiring_subscriptions():
                         expiration_date=expiration_date.strftime("%Y-%m-%d"),
                     )
 
-                    send_and_log_email(user.email, subject, body)
+                    send_and_log_email(
+                        user.email,
+                        subject,
+                        body,
+                        from_email=app.config["NOTIFICATION_EMAIL"],
+                        reply_to=app.config["NOTIFICATION_EMAIL"],
+                    )
 
                     sent_notifications.add(key)
 

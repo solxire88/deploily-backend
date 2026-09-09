@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import flash, redirect, url_for
+from flask import current_app, flash, redirect, url_for
 from flask_appbuilder import ModelView, action
 from flask_appbuilder.actions import action
 from flask_appbuilder.models.sqla.interface import SQLAInterface
@@ -64,6 +64,8 @@ class AffiliationView(ModelView):
                     to=provider.mail_partnership,
                     subject=provider_subject,
                     body=provider_email_body,
+                    from_email=current_app.config["NOTIFICATION_EMAIL"],
+                    reply_to=current_app.config["NOTIFICATION_EMAIL"],
                 )
 
             affiliation.affiliation_state = "confirmed"

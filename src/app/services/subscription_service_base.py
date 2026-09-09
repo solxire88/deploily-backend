@@ -242,6 +242,7 @@ class SubscriptionServiceBase:
             body=user_template,
             email_to=user.email,
             email_from=current_app.config["NOTIFICATION_EMAIL"],
+            reply_to=current_app.config["NOTIFICATION_EMAIL"],
             mail_state="outGoing",
         )
 

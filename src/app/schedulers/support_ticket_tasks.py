@@ -117,13 +117,19 @@ def auto_close_support_tickets() -> dict:
                     "admin_support_ticket_closed",
                     ticket=ticket,
                 )
-                send_and_log_email(support_mail, admin_subject, admin_body)
+                send_and_log_email(support_mail, admin_subject, admin_body, from_email=support_mail)
 
                 user_subject, user_body = render_email(
                     "user_support_ticket_closed",
                     ticket=ticket,
                 )
-                send_and_log_email(customer_email, user_subject, user_body)
+                send_and_log_email(
+                    customer_email,
+                    user_subject,
+                    user_body,
+                    from_email=support_mail,
+                    reply_to=support_mail,
+                )
 
                 closed += 1
 
@@ -133,13 +139,19 @@ def auto_close_support_tickets() -> dict:
                     "admin_support_ticket_warning",
                     ticket=ticket,
                 )
-                send_and_log_email(support_mail, admin_subject, admin_body)
+                send_and_log_email(support_mail, admin_subject, admin_body, from_email=support_mail)
 
                 user_subject, user_body = render_email(
                     "user_support_ticket_warning",
                     ticket=ticket,
                 )
-                send_and_log_email(customer_email, user_subject, user_body)
+                send_and_log_email(
+                    customer_email,
+                    user_subject,
+                    user_body,
+                    from_email=support_mail,
+                    reply_to=support_mail,
+                )
                 warned += 1
 
             try:
