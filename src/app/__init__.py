@@ -85,6 +85,9 @@ from .promo_code import models, views, controllers
 from . import services, schedulers
 from .service_ressources import views, controllers
 
+# Imported last so "Configuration" is the last top-level category registered,
+# landing it rightmost in the FAB top nav instead of in the middle.
+from .core.views import email_template_views  # noqa: F401
 
 appbuilder.add_link(
     name="Swagger documentation",

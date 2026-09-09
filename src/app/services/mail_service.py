@@ -71,8 +71,8 @@ def send_and_log_email(to, subject, body, from_email=None, reply_to=None):
         if mail.reply_to:
             msg["Reply-To"] = mail.reply_to
 
-        smtp_host = current_app.config["MAIL_HOST"]
-        smtp_port = int(current_app.config["MAIL_PORT"])
+        smtp_host = creds["host"]
+        smtp_port = int(creds["port"])
         smtp_user = creds["user"]
         smtp_pass = creds["pass"]
 

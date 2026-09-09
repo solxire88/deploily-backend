@@ -35,8 +35,8 @@ def send_mail(mail_id):
             if mail.reply_to:
                 msg["Reply-To"] = mail.reply_to
 
-            smtp_host = current_app.config["MAIL_HOST"]
-            smtp_port = int(current_app.config["MAIL_PORT"])
+            smtp_host = creds["host"]
+            smtp_port = int(creds["port"])
             smtp_user = creds["user"]
             smtp_pass = creds["pass"]
 

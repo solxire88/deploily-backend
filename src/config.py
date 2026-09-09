@@ -404,17 +404,23 @@ SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL")
 
 # Per-identity SMTP credentials, only needed once a real separate account
 # exists for that identity (falls back to the single MAIL_USER/MAIL_PASS
-# account below until then).
+# account below until then). Host/port are per-identity too since each
+# account can live on a different mail provider -- they default to the
+# global MAIL_HOST/MAIL_PORT only when unset.
 MAIL_CONNECT_ADDRESS = os.getenv("MAIL_CONNECT_ADDRESS")
 MAIL_CONNECT_USER = os.getenv("MAIL_CONNECT_USER")
 MAIL_CONNECT_PASS = os.getenv("MAIL_CONNECT_PASS")
+MAIL_CONNECT_HOST = os.getenv("MAIL_CONNECT_HOST") or MAIL_HOST
+MAIL_CONNECT_PORT = int(os.getenv("MAIL_CONNECT_PORT") or MAIL_PORT)
 
 MAIL_SUPPORT_ADDRESS = os.getenv("MAIL_SUPPORT_ADDRESS")
 MAIL_SUPPORT_USER = os.getenv("MAIL_SUPPORT_USER")
 MAIL_SUPPORT_PASS = os.getenv("MAIL_SUPPORT_PASS")
+MAIL_SUPPORT_HOST = os.getenv("MAIL_SUPPORT_HOST") or MAIL_HOST
+MAIL_SUPPORT_PORT = int(os.getenv("MAIL_SUPPORT_PORT") or MAIL_PORT)
 
-# Sender address -> SMTP login credentials. Looked up at send time from
-# Mail.email_from -- no separate "which account" flag anywhere. Every
+# Sender address -> SMTP login credentials + server. Looked up at send time
+# from Mail.email_from -- no separate "which account" flag anywhere. Every
 # address that currently sends mail (MAIL_USERNAME, NOTIFICATION_EMAIL,
 # SUPPORT_EMAIL) defaults to the one configured account, so this is a
 # no-op until MAIL_CONNECT_*/MAIL_SUPPORT_* are actually set to distinct
@@ -422,14 +428,19 @@ MAIL_SUPPORT_PASS = os.getenv("MAIL_SUPPORT_PASS")
 MAIL_ACCOUNTS = {}
 if MAIL_USERNAME and MAIL_PASSWORD:
     for _addr in filter(None, {MAIL_USERNAME, NOTIFICATION_EMAIL, SUPPORT_EMAIL}):
-        MAIL_ACCOUNTS[_addr] = {"user": MAIL_USERNAME, "pass": MAIL_PASSWORD}
+        MAIL_ACCOUNTS[_addr] = {
+            "user": MAIL_USERNAME,
+            "pass": MAIL_PASSWORD,
+            "host": MAIL_HOST,
+            "port": MAIL_PORT,
+        }
 
-for _addr, _user, _pass in (
-    (MAIL_CONNECT_ADDRESS, MAIL_CONNECT_USER, MAIL_CONNECT_PASS),
-    (MAIL_SUPPORT_ADDRESS, MAIL_SUPPORT_USER, MAIL_SUPPORT_PASS),
+for _addr, _user, _pass, _host, _port in (
+    (MAIL_CONNECT_ADDRESS, MAIL_CONNECT_USER, MAIL_CONNECT_PASS, MAIL_CONNECT_HOST, MAIL_CONNECT_PORT),
+    (MAIL_SUPPORT_ADDRESS, MAIL_SUPPORT_USER, MAIL_SUPPORT_PASS, MAIL_SUPPORT_HOST, MAIL_SUPPORT_PORT),
 ):
-    if _addr and _user and _pass:
-        MAIL_ACCOUNTS[_addr] = {"user": _user, "pass": _pass}
+    if _addr and _user and _pass and _host:
+        MAIL_ACCOUNTS[_addr] = {"user": _user, "pass": _pass, "host": _host, "port": _port}
 
 
 CAPTCHA_SECRET_KEY = os.getenv("CAPTCHA_SECRET_KEY")
